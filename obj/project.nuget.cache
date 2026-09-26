@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "P+GGXHPaCG8=",
+  "success": true,
+  "projectFilePath": "C:\\project\\2\\Asp net\\OrderFlow\\OrderFlow.Api\\OrderFlow.Api.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Asus\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.12\\microsoft.aspnetcore.openapi.10.0.12.nupkg.sha512",
+    "C:\\Users\\Asus\\.nuget\\packages\\microsoft.openapi\\2.12.0\\microsoft.openapi.2.12.0.nupkg.sha512"
+  ],
+  "logs": []
+}
