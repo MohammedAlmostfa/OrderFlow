@@ -1,0 +1,13 @@
+using OrderFlow.Api.DTOs.Categories;
+
+namespace OrderFlow.Api.Services.Categories;
+
+public interface ICategoryService
+{
+    Task<List<CategoryResponse>> GetAllAsync();
+
+    Task<CategoryResponse?> GetByIdAsync(int id);
+
+    Task<CategoryResponse> CreateAsync(
+        CreateCategoryRequest request);
+}

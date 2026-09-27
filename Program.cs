@@ -1,7 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using OrderFlow.Api.Data;
+using OrderFlow.Api.Services.Categories;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddScoped<
+    ICategoryService,
+    CategoryService>();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(
         builder.Configuration.GetConnectionString("DefaultConnection")
