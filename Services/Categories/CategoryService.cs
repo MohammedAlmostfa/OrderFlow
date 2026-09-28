@@ -1,3 +1,4 @@
+
 using Microsoft.EntityFrameworkCore;
 using OrderFlow.Api.Data;
 using OrderFlow.Api.DTOs.Categories;
@@ -59,5 +60,48 @@ public class CategoryService : ICategoryService
             Name = category.Name,
             CreatedAt = category.CreatedAt
         };
+    }
+
+    public async Task<CategoryResponse?> UpdateAsync(
+        int id,
+        UpdateCategoryRequest request)
+    {
+        var category = await _context.Categories
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (category is null)
+            return null;
+
+        category.Name = request.Name.Trim();
+
+        await _context.SaveChangesAsync();
+
+        return new CategoryResponse
+        {
+            Id = category.Id,
+            Name = category.Name,
+            CreatedAt = category.CreatedAt
+        };
+    }
+
+    public async Task<CategoryDeleteResult> DeleteAsync(int id)
+    {
+        var category = await _context.Categories
+            .FirstOrDefaultAsync(c => c.Id == id);
+
+        if (category is null)
+            return CategoryDeleteResult.NotFound;
+
+        var hasProducts = await _context.Products
+            .AnyAsync(p => p.CategoryId == id);
+
+        if (hasProducts)
+            return CategoryDeleteResult.HasProducts;
+
+        _context.Categories.Remove(category);
+
+        await _context.SaveChangesAsync();
+
+        return CategoryDeleteResult.Deleted;
     }
 }

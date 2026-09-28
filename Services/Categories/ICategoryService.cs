@@ -1,3 +1,4 @@
+
 using OrderFlow.Api.DTOs.Categories;
 
 namespace OrderFlow.Api.Services.Categories;
@@ -10,4 +11,10 @@ public interface ICategoryService
 
     Task<CategoryResponse> CreateAsync(
         CreateCategoryRequest request);
+
+    Task<CategoryResponse?> UpdateAsync(
+        int id,
+        UpdateCategoryRequest request);
+
+    Task<CategoryDeleteResult> DeleteAsync(int id);
 }

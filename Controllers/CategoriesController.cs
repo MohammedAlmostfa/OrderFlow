@@ -1,3 +1,4 @@
+
 using Microsoft.AspNetCore.Mvc;
 using OrderFlow.Api.DTOs.Categories;
 using OrderFlow.Api.Services.Categories;
@@ -44,5 +45,39 @@ public class CategoriesController : ControllerBase
             nameof(GetById),
             new { id = category.Id },
             category);
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(
+        int id,
+        UpdateCategoryRequest request)
+    {
+        var category = await _categoryService.UpdateAsync(id, request);
+
+        if (category is null)
+            return NotFound();
+
+        return Ok(category);
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var result = await _categoryService.DeleteAsync(id);
+
+        return result switch
+        {
+            CategoryDeleteResult.NotFound => NotFound(),
+
+            CategoryDeleteResult.HasProducts =>
+                Conflict(new
+                {
+                    message = "Cannot delete a category that has products."
+                }),
+
+            CategoryDeleteResult.Deleted => NoContent(),
+
+            _ => StatusCode(500)
+        };
     }
 }
