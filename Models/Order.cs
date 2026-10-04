@@ -8,7 +8,7 @@ public class Order
 
     public User User { get; set; } = null!;
 
-    public string Status { get; set; } = "Pending";
+  public OrderStatus Status { get; set; } = OrderStatus.Pending;
 
     public decimal TotalAmount { get; set; }
 

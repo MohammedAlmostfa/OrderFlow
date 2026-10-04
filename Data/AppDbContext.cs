@@ -64,6 +64,9 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Order>()
             .Property(o => o.TotalAmount)
             .HasPrecision(18, 2);
+            modelBuilder.Entity<Order>()
+    .Property(o => o.Status)
+    .HasConversion<string>();
 
         modelBuilder.Entity<OrderItem>()
             .Property(i => i.UnitPrice)

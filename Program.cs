@@ -45,8 +45,9 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-
+builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<PasswordHasher<User>>();
+builder.Services.AddScoped<OrderStatusService>();
 builder.Services.Configure<JwtSettings>(
     builder.Configuration.GetSection("Jwt"));
 
