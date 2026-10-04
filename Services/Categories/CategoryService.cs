@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrderFlow.Api.Data;
 using OrderFlow.Api.DTOs.Categories;
+using OrderFlow.Api.Exceptions;
 using OrderFlow.Api.Models;
 
 namespace OrderFlow.Api.Services.Categories;
@@ -28,7 +29,7 @@ public class CategoryService : ICategoryService
             .ToListAsync();
     }
 
-    public async Task<CategoryResponse?> GetByIdAsync(int id)
+    public async Task<CategoryResponse> GetByIdAsync(int id)
     {
         return await _context.Categories
             .AsNoTracking()
@@ -39,7 +40,8 @@ public class CategoryService : ICategoryService
                 Name = c.Name,
                 CreatedAt = c.CreatedAt
             })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync()
+            ?? throw new NotFoundException("Category not found.");
     }
 
     public async Task<CategoryResponse> CreateAsync(
@@ -62,7 +64,7 @@ public class CategoryService : ICategoryService
         };
     }
 
-    public async Task<CategoryResponse?> UpdateAsync(
+    public async Task<CategoryResponse> UpdateAsync(
         int id,
         UpdateCategoryRequest request)
     {
@@ -70,7 +72,7 @@ public class CategoryService : ICategoryService
             .FirstOrDefaultAsync(c => c.Id == id);
 
         if (category is null)
-            return null;
+            throw new NotFoundException("Category not found.");
 
         category.Name = request.Name.Trim();
 
@@ -84,24 +86,24 @@ public class CategoryService : ICategoryService
         };
     }
 
-    public async Task<CategoryDeleteResult> DeleteAsync(int id)
+    public async Task DeleteAsync(int id)
     {
         var category = await _context.Categories
             .FirstOrDefaultAsync(c => c.Id == id);
 
         if (category is null)
-            return CategoryDeleteResult.NotFound;
+            throw new NotFoundException("Category not found.");
 
         var hasProducts = await _context.Products
             .AnyAsync(p => p.CategoryId == id);
 
         if (hasProducts)
-            return CategoryDeleteResult.HasProducts;
+            throw new ConflictException(
+                "Cannot delete a category that has products.");
 
         _context.Categories.Remove(category);
 
         await _context.SaveChangesAsync();
 
-        return CategoryDeleteResult.Deleted;
     }
 }

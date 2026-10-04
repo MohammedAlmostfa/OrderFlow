@@ -31,28 +31,10 @@ public class AdminOrdersController : ControllerBase
         int id,
         UpdateOrderStatusRequest request)
     {
-        var result = await _orderService.UpdateStatusAsync(
+        var order = await _orderService.UpdateStatusAsync(
             id,
             request.Status);
 
-        return result.Status switch
-        {
-            OrderStatusUpdateStatus.NotFound =>
-                NotFound(new
-                {
-                    message = "Order not found."
-                }),
-
-            OrderStatusUpdateStatus.InvalidTransition =>
-                Conflict(new
-                {
-                    message = "Invalid order status transition."
-                }),
-
-            OrderStatusUpdateStatus.Success =>
-                Ok(result.Order),
-
-            _ => StatusCode(500)
-        };
+        return Ok(order);
     }
 }

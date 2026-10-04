@@ -7,14 +7,14 @@ public interface ICategoryService
 {
     Task<List<CategoryResponse>> GetAllAsync();
 
-    Task<CategoryResponse?> GetByIdAsync(int id);
+    Task<CategoryResponse> GetByIdAsync(int id);
 
     Task<CategoryResponse> CreateAsync(
         CreateCategoryRequest request);
 
-    Task<CategoryResponse?> UpdateAsync(
+    Task<CategoryResponse> UpdateAsync(
         int id,
         UpdateCategoryRequest request);
 
-    Task<CategoryDeleteResult> DeleteAsync(int id);
+    Task DeleteAsync(int id);
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrderFlow.Api.Data;
 using OrderFlow.Api.DTOs.Orders;
+using OrderFlow.Api.Exceptions;
 using OrderFlow.Api.Models;
 
 namespace OrderFlow.Api.Services.Orders;
@@ -18,7 +19,7 @@ public class OrderService : IOrderService
         _orderStatusService = orderStatusService;
     }
 
-public async Task<OrderCreateResult> CreateAsync(
+public async Task<OrderResponse> CreateAsync(
     int userId,
     CreateOrderRequest request)
     {
@@ -27,12 +28,7 @@ public async Task<OrderCreateResult> CreateAsync(
             .AnyAsync(u => u.Id == userId);
 
     if (!userExists)
-{
-    return new OrderCreateResult
-    {
-        Status = OrderCreateStatus.UserNotFound
-    };
-}
+        throw new NotFoundException("User not found.");
 
         // 2. Combine duplicate product IDs.
         var requestedItems = request.Items
@@ -55,12 +51,7 @@ public async Task<OrderCreateResult> CreateAsync(
             .ToListAsync();
 
         if (products.Count != productIds.Count)
-{
-    return new OrderCreateResult
-    {
-        Status = OrderCreateStatus.ProductNotFound
-    };
-}
+            throw new NotFoundException("One or more products were not found.");
 
         var productsById = products.ToDictionary(p => p.Id);
 
@@ -86,12 +77,7 @@ public async Task<OrderCreateResult> CreateAsync(
                         p => p.StockQuantity - item.Quantity));
 
             if (stockUpdated == 0)
-            {
-                return new OrderCreateResult
-                {
-                    Status = OrderCreateStatus.InsufficientStock
-                };
-            }
+                throw new ConflictException("Insufficient stock.");
 
             var orderItem = new OrderItem
             {
@@ -114,11 +100,8 @@ public async Task<OrderCreateResult> CreateAsync(
 
         await transaction.CommitAsync();
 
-      return new OrderCreateResult
+    return new OrderResponse
 {
-    Status = OrderCreateStatus.Success,
-    Order = new OrderResponse
-    {
         Id = order.Id,
         UserId = order.UserId,
         Status = order.Status.ToString(),
@@ -132,7 +115,6 @@ public async Task<OrderCreateResult> CreateAsync(
             UnitPrice = item.UnitPrice,
             Subtotal = item.UnitPrice * item.Quantity
         }).ToList()
-    }
 };
     }
 
@@ -164,7 +146,7 @@ public async Task<List<OrderResponse>> GetMyOrdersAsync(
 }
 
 
-public async Task<OrderResponse?> GetByIdAsync(
+public async Task<OrderResponse> GetByIdAsync(
     int orderId,
     int userId)
 {
@@ -188,10 +170,11 @@ public async Task<OrderResponse?> GetByIdAsync(
                 Subtotal = item.UnitPrice * item.Quantity
             }).ToList()
         })
-        .FirstOrDefaultAsync();
+        .FirstOrDefaultAsync()
+        ?? throw new NotFoundException("Order not found.");
 }
 
-public async Task<OrderStatusUpdateResult> UpdateStatusAsync(
+    public async Task<OrderResponse> UpdateStatusAsync(
     int orderId,
     OrderStatus newStatus)
 {
@@ -204,24 +187,14 @@ public async Task<OrderStatusUpdateResult> UpdateStatusAsync(
         .FirstOrDefaultAsync(o => o.Id == orderId);
 
     if (order is null)
-    {
-        return new OrderStatusUpdateResult
-        {
-            Status = OrderStatusUpdateStatus.NotFound
-        };
-    }
+        throw new NotFoundException("Order not found.");
 
     var isValid = _orderStatusService.IsValidTransition(
         order.Status,
         newStatus);
 
     if (!isValid)
-    {
-        return new OrderStatusUpdateResult
-        {
-            Status = OrderStatusUpdateStatus.InvalidTransition
-        };
-    }
+        throw new ConflictException("Invalid order status transition.");
 
     var updatedAt = DateTime.UtcNow;
     var updated = await _context.Orders
@@ -231,12 +204,7 @@ public async Task<OrderStatusUpdateResult> UpdateStatusAsync(
             .SetProperty(o => o.UpdatedAt, updatedAt));
 
     if (updated == 0)
-    {
-        return new OrderStatusUpdateResult
-        {
-            Status = OrderStatusUpdateStatus.InvalidTransition
-        };
-    }
+        throw new ConflictException("Invalid order status transition.");
 
     if (newStatus == OrderStatus.Cancelled)
     {
@@ -256,11 +224,7 @@ public async Task<OrderStatusUpdateResult> UpdateStatusAsync(
 
     var response = await GetByIdForAdminAsync(orderId);
 
-    return new OrderStatusUpdateResult
-    {
-        Status = OrderStatusUpdateStatus.Success,
-        Order = response
-    };
+    return response ?? throw new NotFoundException("Order not found.");
 }
 
 public async Task<List<OrderResponse>> GetAllAsync()

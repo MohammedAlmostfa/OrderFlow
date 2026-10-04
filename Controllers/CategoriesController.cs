@@ -29,9 +29,6 @@ public class CategoriesController : ControllerBase
     {
         var category = await _categoryService.GetByIdAsync(id);
 
-        if (category is null)
-            return NotFound();
-
         return Ok(category);
     }
 
@@ -54,30 +51,14 @@ public class CategoriesController : ControllerBase
     {
         var category = await _categoryService.UpdateAsync(id, request);
 
-        if (category is null)
-            return NotFound();
-
         return Ok(category);
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var result = await _categoryService.DeleteAsync(id);
+        await _categoryService.DeleteAsync(id);
 
-        return result switch
-        {
-            CategoryDeleteResult.NotFound => NotFound(),
-
-            CategoryDeleteResult.HasProducts =>
-                Conflict(new
-                {
-                    message = "Cannot delete a category that has products."
-                }),
-
-            CategoryDeleteResult.Deleted => NoContent(),
-
-            _ => StatusCode(500)
-        };
+        return NoContent();
     }
 }

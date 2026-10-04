@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using OrderFlow.Api.Configuration;
 using System.Text;
-
+using OrderFlow.Api.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -78,6 +78,8 @@ builder.Services.AddAuthorization();
 
 
 var app = builder.Build();
+
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

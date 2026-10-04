@@ -21,14 +21,6 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.RegisterAsync(request);
 
-        if (result is null)
-        {
-            return Conflict(new
-            {
-                message = "Email is already registered."
-            });
-        }
-
         return Ok(result);
     }
 

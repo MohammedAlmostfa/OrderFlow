@@ -28,9 +28,6 @@ public class ProductsController : ControllerBase
     {
         var product = await _productService.GetByIdAsync(id);
 
-        if (product is null)
-            return NotFound();
-
         return Ok(product);
     }
 
@@ -39,14 +36,6 @@ public class ProductsController : ControllerBase
         CreateProductRequest request)
     {
         var product = await _productService.CreateAsync(request);
-
-        if (product is null)
-        {
-            return BadRequest(new
-            {
-                message = "The specified category does not exist."
-            });
-        }
 
         return CreatedAtAction(
             nameof(GetById),
@@ -61,34 +50,13 @@ public class ProductsController : ControllerBase
     {
         var product = await _productService.UpdateAsync(id, request);
 
-        if (product is null)
-        {
-            return BadRequest(new
-            {
-                message = "The product or category does not exist."
-            });
-        }
-
         return Ok(product);
     }
 [HttpDelete("{id:int}")]
 public async Task<IActionResult> Delete(int id)
 {
-    var result = await _productService.DeleteAsync(id);
+    await _productService.DeleteAsync(id);
 
-    return result switch
-    {
-        ProductDeleteResult.NotFound => NotFound(),
-
-        ProductDeleteResult.HasOrderItems =>
-            Conflict(new
-            {
-                message = "Cannot delete a product that belongs to an order."
-            }),
-
-        ProductDeleteResult.Deleted => NoContent(),
-
-        _ => StatusCode(500)
-    };
+    return NoContent();
 }
 }

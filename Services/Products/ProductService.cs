@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using OrderFlow.Api.Data;
 using OrderFlow.Api.DTOs.Products;
+using OrderFlow.Api.Exceptions;
 using OrderFlow.Api.Models;
 
 namespace OrderFlow.Api.Services.Products;
@@ -33,7 +34,7 @@ public class ProductService : IProductService
             .ToListAsync();
     }
 
-    public async Task<ProductResponse?> GetByIdAsync(int id)
+    public async Task<ProductResponse> GetByIdAsync(int id)
     {
         return await _context.Products
             .AsNoTracking()
@@ -50,17 +51,19 @@ public class ProductService : IProductService
                 CreatedAt = p.CreatedAt,
                 UpdatedAt = p.UpdatedAt
             })
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync()
+            ?? throw new NotFoundException("Product not found.");
     }
 
-    public async Task<ProductResponse?> CreateAsync(
+    public async Task<ProductResponse> CreateAsync(
         CreateProductRequest request)
     {
         var categoryExists = await _context.Categories
             .AnyAsync(c => c.Id == request.CategoryId);
 
         if (!categoryExists)
-            return null;
+            throw new BadRequestException(
+                "The specified category does not exist.");
 
         var product = new Product
         {
@@ -78,7 +81,7 @@ public class ProductService : IProductService
         return await GetByIdAsync(product.Id);
     }
 
-    public async Task<ProductResponse?> UpdateAsync(
+    public async Task<ProductResponse> UpdateAsync(
         int id,
         UpdateProductRequest request)
     {
@@ -86,13 +89,14 @@ public class ProductService : IProductService
             .FirstOrDefaultAsync(p => p.Id == id);
 
         if (product is null)
-            return null;
+            throw new NotFoundException("Product not found.");
 
         var categoryExists = await _context.Categories
             .AnyAsync(c => c.Id == request.CategoryId);
 
         if (!categoryExists)
-            return null;
+            throw new BadRequestException(
+                "The specified category does not exist.");
 
         product.Name = request.Name.Trim();
         product.Description = request.Description.Trim();
@@ -106,24 +110,23 @@ public class ProductService : IProductService
         return await GetByIdAsync(product.Id);
     }
 
-  public async Task<ProductDeleteResult> DeleteAsync(int id)
-{
-    var product = await _context.Products
-        .FirstOrDefaultAsync(p => p.Id == id);
+    public async Task DeleteAsync(int id)
+    {
+        var product = await _context.Products
+            .FirstOrDefaultAsync(p => p.Id == id);
 
-    if (product is null)
-        return ProductDeleteResult.NotFound;
+        if (product is null)
+            throw new NotFoundException("Product not found.");
 
-    var hasOrderItems = await _context.OrderItems
-        .AnyAsync(i => i.ProductId == id);
+        var hasOrderItems = await _context.OrderItems
+            .AnyAsync(i => i.ProductId == id);
 
-    if (hasOrderItems)
-        return ProductDeleteResult.HasOrderItems;
+        if (hasOrderItems)
+            throw new ConflictException(
+                "Cannot delete a product that belongs to an order.");
 
-    _context.Products.Remove(product);
+        _context.Products.Remove(product);
 
-    await _context.SaveChangesAsync();
-
-    return ProductDeleteResult.Deleted;
-}
+        await _context.SaveChangesAsync();
+    }
 }

@@ -35,35 +35,11 @@ public class OrderController : ControllerBase
             return Unauthorized();
         }
 
-        var result = await _orderService.CreateAsync(
+        var order = await _orderService.CreateAsync(
             userId,
             request);
 
-        return result.Status switch
-        {
-            OrderCreateStatus.UserNotFound =>
-                NotFound(new
-                {
-                    message = "User not found."
-                }),
-
-            OrderCreateStatus.ProductNotFound =>
-                NotFound(new
-                {
-                    message = "One or more products were not found."
-                }),
-
-            OrderCreateStatus.InsufficientStock =>
-                Conflict(new
-                {
-                    message = "Insufficient stock."
-                }),
-
-            OrderCreateStatus.Success =>
-                Ok(result.Order),
-
-            _ => StatusCode(500)
-        };
+        return Ok(order);
     }
     [HttpGet("my-orders")]
 public async Task<IActionResult> GetMyOrders()
@@ -106,14 +82,6 @@ public async Task<IActionResult> GetById(int id)
     var order = await _orderService.GetByIdAsync(
         id,
         userId);
-
-    if (order is null)
-    {
-        return NotFound(new
-        {
-            message = "Order not found."
-        });
-    }
 
     return Ok(order);
 }

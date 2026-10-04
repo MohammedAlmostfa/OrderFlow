@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using OrderFlow.Api.Data;
 using OrderFlow.Api.DTOs.Auth;
+using OrderFlow.Api.Exceptions;
 using OrderFlow.Api.Models;
 
 namespace OrderFlow.Api.Services.Auth;
@@ -21,7 +22,7 @@ private readonly IJwtService _jwtService;
     _jwtService = jwtService;
 }
 
-    public async Task<AuthResponse?> RegisterAsync(
+    public async Task<AuthResponse> RegisterAsync(
         RegisterRequest request)
     {
         var email = request.Email.Trim().ToLowerInvariant();
@@ -30,7 +31,7 @@ private readonly IJwtService _jwtService;
             .AnyAsync(u => u.Email == email);
 
         if (emailExists)
-            return null;
+            throw new ConflictException("Email is already registered.");
 
         var user = new User
         {

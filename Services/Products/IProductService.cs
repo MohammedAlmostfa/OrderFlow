@@ -6,14 +6,15 @@ public interface IProductService
 {
     Task<List<ProductResponse>> GetAllAsync();
 
-    Task<ProductResponse?> GetByIdAsync(int id);
+    Task<ProductResponse> GetByIdAsync(int id);
 
-    Task<ProductResponse?> CreateAsync(
+    Task<ProductResponse> CreateAsync(
         CreateProductRequest request);
 
-    Task<ProductResponse?> UpdateAsync(
+    Task<ProductResponse> UpdateAsync(
         int id,
         UpdateProductRequest request);
 
-    Task<ProductDeleteResult> DeleteAsync(int id);}
+    Task DeleteAsync(int id);
+}
     
